@@ -66,8 +66,6 @@ func main() {
 		taxLabel.SetText(taxString)
 	})
 
-
-
 	// Create the layout
 	content := container.New(layout.NewVBoxLayout(),
 		widget.NewLabel("Income"),

@@ -42,7 +42,6 @@ func main() {
 	// Create the output widgets
 	taxLabel := widget.NewLabel("")
 	taxableIncomeLabel := widget.NewLabel("")
-	netPayAfterTaxLabel := widget.NewLabel("")
 	sssContributionsLabel := widget.NewLabel("")
 	pagibigContributionsLabel := widget.NewLabel("")
 	philhealthContributionsLabel := widget.NewLabel("")
@@ -60,7 +59,7 @@ func main() {
 
 		// Convert input to decimal.Decimal
 		monthlyIncome, err := decimal.NewFromString(incomeStr)
-		if err != nil {
+		if err != nil || monthlyIncome.LessThan(decimal.Zero) {
 			widget.NewLabel("Invalid monthly income input")
 			return
 		}
@@ -109,10 +108,9 @@ func main() {
 		widget.NewLabel("Tax Computation"),
 		taxableIncomeLabel,
 		taxLabel,
-		netPayAfterTaxLabel,
 		layout.NewSpacer())
 	contribContainer := container.NewVBox(
-		widget.NewLabel("Monthly Contributions"),
+		widget.NewLabelWithStyle("Monthly Contributions",fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		container.NewHBox(
 			widget.NewLabel("SSS Contribution"),
 			sssContributionsLabel,

@@ -147,7 +147,8 @@ func main() {
 	myWindow := myApp.NewWindow("Tax Calculator")
 	myApp.Settings().SetTheme(theme.LightTheme())
 	myWindow.SetContent(content)
-	myWindow.Resize(fyne.NewSize(800, 600))
+	myWindow.Resize(fyne.NewSize(600, 600))
+	myWindow.SetFixedSize(true)
 	myWindow.ShowAndRun()
 
 }

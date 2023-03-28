@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	//"image/color"
+	"image/color"
 
 	//"image/color"
 	"strconv"
@@ -14,6 +14,39 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
+
+// / create custom theme
+type myTheme struct{}
+
+var _ fyne.Theme = (*myTheme)(nil)
+
+func (*myTheme) Font(s fyne.TextStyle) fyne.Resource {
+	if s.Monospace {
+		return theme.DefaultTheme().Font(s)
+	}
+	if s.Bold {
+		if s.Italic {
+			return theme.DefaultTheme().Font(s)
+		}
+		return resourceRubikBlackTtf
+	}
+	if s.Italic {
+		return theme.DefaultTheme().Font(s)
+	}
+	return resourceRubikBlackTtf
+}
+
+func (*myTheme) Color(n fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
+	return theme.DefaultTheme().Color(n, v)
+}
+
+func (*myTheme) Icon(n fyne.ThemeIconName) fyne.Resource {
+	return theme.DefaultTheme().Icon(n)
+}
+
+func (*myTheme) Size(n fyne.ThemeSizeName) float32 {
+	return theme.DefaultTheme().Size(n)
+}
 
 // Define a struct to hold user input
 type TaxInputs struct {
@@ -145,7 +178,7 @@ func main() {
 	)
 	// Create the window
 	myWindow := myApp.NewWindow("Tax Calculator")
-	myApp.Settings().SetTheme(theme.LightTheme())
+	myApp.Settings().SetTheme(&myTheme{})
 	myWindow.SetContent(content)
 	myWindow.ShowAndRun()
 

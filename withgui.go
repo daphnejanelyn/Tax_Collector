@@ -91,8 +91,8 @@ func main() {
 		}
 
 		// Display the results
-		taxLabel.SetText(fmt.Sprintf("Income Tax: Php ", inputs.Tax.StringFixed(2)))
-		taxableIncomeLabel.SetText(fmt.Sprintf("Taxable Income: Php ", inputs.TaxableIncome.StringFixed(2)))
+		taxLabel.SetText(fmt.Sprintf("Php ", inputs.Tax.StringFixed(2)))
+		taxableIncomeLabel.SetText(fmt.Sprintf("Php ", inputs.TaxableIncome.StringFixed(2)))
 		sssContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.SSSContributions.StringFixed(2)))
 		philhealthContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PhilHealthContributions.StringFixed(2)))
 		pagibigContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PagIbigContributions.StringFixed(2)))
@@ -106,12 +106,18 @@ func main() {
 	// Create the layout
 	// Create the layout
 	taxContainer := container.NewVBox(
-		widget.NewLabel("Tax Computation"),
-		taxableIncomeLabel,
-		taxLabel,
+		widget.NewLabelWithStyle("Tax Computation", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		container.NewHBox(
+			widget.NewLabel("Taxable Income"),
+			taxableIncomeLabel,
+		),
+		container.NewHBox(
+			widget.NewLabel("Income Tax"),
+			taxLabel,
+		),
 		layout.NewSpacer())
 	contribContainer := container.NewVBox(
-		widget.NewLabelWithStyle("Monthly Contributions", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+		widget.NewLabelWithStyle("Monthly Contributions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 		container.NewHBox(
 			widget.NewLabel("SSS Contribution"),
 			sssContributionsLabel,
@@ -128,21 +134,21 @@ func main() {
 			widget.NewLabel("Total Contribution"),
 			totalContributionsLabel,
 		))
-
+	finalComputations := container.NewVBox(
+							widget.NewLabelWithStyle("Total Deductions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+							totalDeductionsLabel,
+							widget.NewLabelWithStyle("Net Pay After Deductions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+							netPayAfterDeductionsLabel,
+						)
 	content := container.New(layout.NewVBoxLayout(),
 		container.NewVBox(
-			widget.NewLabel("Monthly Income"),
+			widget.NewLabelWithStyle("Monthly Income", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 			incomeEntry,
 			calculateBtn,
 			layout.NewSpacer(),
 		),
-		container.New(layout.NewGridWrapLayout(fyne.NewSize(300, 300)), contribContainer, taxContainer),
-		container.NewVBox(
-			widget.NewLabel("Total Deductions"),
-			totalDeductionsLabel,
-			widget.NewLabel("Net Pay After Deductions Label"),
-			netPayAfterDeductionsLabel,
-		),
+		container.New(layout.NewGridWrapLayout(fyne.NewSize(300, 250)), contribContainer, taxContainer),
+		container.New(layout.NewGridWrapLayout(fyne.NewSize(180, 180)), finalComputations),
 	)
 	// Create the window
 	myWindow := myApp.NewWindow("Tax Calculator")

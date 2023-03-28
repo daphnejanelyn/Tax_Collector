@@ -91,14 +91,15 @@ func main() {
 		}
 
 		// Display the results
-		taxLabel.SetText(fmt.Sprintf("Income Tax: Php ", inputs.Tax.Round(2).String()))
-		taxableIncomeLabel.SetText(fmt.Sprintf("Taxable Income: Php ", inputs.TaxableIncome.Round(2).String()))
-		sssContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.SSSContributions.Round(2).String()))
-		philhealthContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PhilHealthContributions.Round(2).String()))
-		pagibigContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PagIbigContributions.Round(2).String()))
-		totalContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalContributions.Round(2).String()))
-		totalDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalDeductions.Round(2).String()))
-		netPayAfterDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.NetPayAfterDeductions.Round(2).String()))
+		taxLabel.SetText(fmt.Sprintf("Income Tax: Php ", inputs.Tax.StringFixed(2)))
+		taxableIncomeLabel.SetText(fmt.Sprintf("Taxable Income: Php ", inputs.TaxableIncome.StringFixed(2)))
+		sssContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.SSSContributions.StringFixed(2)))
+		philhealthContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PhilHealthContributions.StringFixed(2)))
+		pagibigContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PagIbigContributions.StringFixed(2)))
+		totalContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalContributions.StringFixed(2)))
+		totalDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalDeductions.StringFixed(2)))
+		netPayAfterDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.NetPayAfterDeductions.StringFixed(2)))
+
 	})
 	//calculateBtn.SetBackgroundColor(color.RGBA{R: 211, G: 211, B: 211, A: 211})
 

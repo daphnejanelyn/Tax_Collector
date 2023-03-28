@@ -5,7 +5,6 @@ import (
 	//"image/color"
 
 	//"image/color"
-	"strconv"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -13,20 +12,23 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+
+	// for decimal
+	"github.com/shopspring/decimal"
 )
 
 // Define a struct to hold user input
 type TaxInputs struct {
-	MonthlyIncome           float64
-	TaxableIncome           float64
-	Tax                     float64
-	NetPayAfterTax          float64
-	SSSContributions        float64
-	PhilHealthContributions float64
-	PagIbigContributions    float64
-	TotalContributions      float64
-	TotalDeductions         float64
-	NetPayAfterDeductions   float64
+	MonthlyIncome           decimal.Decimal
+	TaxableIncome           decimal.Decimal
+	Tax                     decimal.Decimal
+	NetPayAfterTax          decimal.Decimal
+	SSSContributions        decimal.Decimal
+	PhilHealthContributions decimal.Decimal
+	PagIbigContributions    decimal.Decimal
+	TotalContributions      decimal.Decimal
+	TotalDeductions         decimal.Decimal
+	NetPayAfterDeductions   decimal.Decimal
 }
 
 func main() {
@@ -56,30 +58,31 @@ func main() {
 		// Parse user input
 		incomeStr := incomeEntry.Text
 
-		// Convert input to float64
-		monthlyIncome, err := strconv.ParseFloat(incomeStr, 64)
+		// Convert input to decimal.Decimal
+		monthlyIncome, err := decimal.NewFromString(incomeStr)
 		if err != nil {
 			widget.NewLabel("Invalid monthly income input")
 			return
 		}
 
-		// Calculate the tax, net pay after tax, monthly contributions, total deductions and net pay after deductions
-		taxableIncome := monthlyIncome * 12 // INSERT RIGHT FORMULA
-		tax := calculateTax(taxableIncome)
-		netPayAfterTax := monthlyIncome - (tax / 12) // INSERT RIGHT FORMULA
+		// DONE: Calculate the sss
 		sssContributions := calculateSSSContributions(monthlyIncome)
-		philhealthContributions := calculatePhilHealthContributions(monthlyIncome)
 		pagibigContributions := calculatePagIbigContributions(monthlyIncome)
-		totalContributions := sssContributions + philhealthContributions + pagibigContributions
-		totalDeductions := tax/12 + totalContributions // INSERT RIGHT FORMULA
-		netPayAfterDeductions := monthlyIncome - totalDeductions
+
+		// TO EDIT:
+		philhealthContributions := decimal.Zero
+		totalContributions := sssContributions.Add(philhealthContributions).Add(pagibigContributions)
+
+		taxableIncome := monthlyIncome.Sub(totalContributions)
+		tax := decimal.Zero
+		totalDeductions := totalContributions.Add(tax)
+		netPayAfterDeductions := monthlyIncome.Sub(totalDeductions)
 
 		// Create a TaxInputs struct to hold the user input and calculated values
 		inputs := TaxInputs{
 			MonthlyIncome:           monthlyIncome,
 			TaxableIncome:           taxableIncome,
 			Tax:                     tax,
-			NetPayAfterTax:          netPayAfterTax,
 			SSSContributions:        sssContributions,
 			PhilHealthContributions: philhealthContributions,
 			PagIbigContributions:    pagibigContributions,
@@ -89,15 +92,14 @@ func main() {
 		}
 
 		// Display the results
-		taxLabel.SetText(fmt.Sprintf("Income Tax: Php %.2f", inputs.Tax))
-		taxableIncomeLabel.SetText(fmt.Sprintf("Taxable Income: Php %.2f", inputs.TaxableIncome))
-		netPayAfterTaxLabel.SetText(fmt.Sprintf("Net Pay After Tax: Php %.2f", inputs.NetPayAfterTax))
-		sssContributionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.SSSContributions))
-		philhealthContributionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.PhilHealthContributions))
-		pagibigContributionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.PagIbigContributions))
-		totalContributionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.TotalContributions))
-		totalDeductionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.TotalDeductions))
-		netPayAfterDeductionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.NetPayAfterDeductions))
+		taxLabel.SetText(fmt.Sprintf("Income Tax: Php ", inputs.Tax))
+		taxableIncomeLabel.SetText(fmt.Sprintf("Taxable Income: Php ", inputs.TaxableIncome))
+		sssContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.SSSContributions))
+		philhealthContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PhilHealthContributions))
+		pagibigContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PagIbigContributions))
+		totalContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalContributions))
+		totalDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalDeductions))
+		netPayAfterDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.NetPayAfterDeductions))
 	})
 	//calculateBtn.SetBackgroundColor(color.RGBA{R: 211, G: 211, B: 211, A: 211})
 
@@ -154,42 +156,88 @@ func main() {
 }
 
 // Define a function to calculate tax based on taxable income
-func calculateTax(taxableIncome float64) float64 {
-	var tax float64
-
-	if taxableIncome <= 250000 {
-		tax = 0
-	} else if taxableIncome <= 400000 {
-		tax = (taxableIncome - 250000) * 0.20
-	} else if taxableIncome <= 800000 {
-		tax = 30000 + (taxableIncome-400000)*0.25
-	} else if taxableIncome <= 2000000 {
-		tax = 130000 + (taxableIncome-800000)*0.30
-	} else if taxableIncome <= 8000000 {
-		tax = 490000 + (taxableIncome-2000000)*0.32
-	} else {
-		tax = 2410000 + (taxableIncome-8000000)*0.35
+func calculateTax(taxableIncome decimal.Decimal) decimal.Decimal {
+	var brackets = []decimal.Decimal{
+		decimal.NewFromFloat(20833),
+		decimal.NewFromFloat(33333),
+		decimal.NewFromFloat(66667),
+		decimal.NewFromFloat(166667),
+		decimal.NewFromFloat(666667),
 	}
 
-	return tax
+	var rates = []decimal.Decimal{
+		decimal.NewFromFloat(0.0),
+		decimal.NewFromFloat(0.15),
+		decimal.NewFromFloat(0.20),
+		decimal.NewFromFloat(0.25),
+		decimal.NewFromFloat(0.30),
+		decimal.NewFromFloat(0.35),
+	}
+
+	tax := decimal.Zero
+
+	if taxableIncome.GreaterThan(brackets[0]) {
+		for i := 1; i < len(brackets); i++ {
+			if taxableIncome.LessThanOrEqual(brackets[i]) {
+				tax = tax.Add((taxableIncome.Sub(brackets[i-1])).Mul(rates[i]))
+				break
+			} else {
+				tax = tax.Add(brackets[i].Sub(brackets[i-1]).Mul(rates[i]))
+			}
+		}
+	}
+
+	return tax.Round(2)
 }
 
-func calculateSSSContributions(taxableIncome float64) float64 {
-	// insert code
-	return 0
+func calculateSSSContributions(monthlyIncome decimal.Decimal) decimal.Decimal {
+	/* Notice that based on the 2023 SSS Table,
+	the formula to get the gross contribution based on the monthly income is
+	the nearest multiple of 500, except when it is lower than 4250 it is automatically 4000,
+	and when it is greater than or equal to 29750 it is automatically 30000.
+	This is then multiplied by 4.5% to get the employee's actual SSS contribution
+
+	The following code is the implementation of this
+	*/
+	employeeRate := decimal.NewFromFloat(0.045)
+
+	var gross decimal.Decimal
+	if monthlyIncome.LessThan(decimal.NewFromInt(4250)) {
+		gross = decimal.NewFromInt(4000)
+	} else if monthlyIncome.GreaterThanOrEqual(decimal.NewFromInt(29750)) {
+		gross = decimal.NewFromInt(30000)
+	} else {
+		gross = monthlyIncome.RoundBank(500)
+	}
+
+	return gross.Mul(employeeRate)
 }
 
-func calculatePagIbigContributions(taxableIncome float64) float64 {
-	// insert code
-	return 0
+func calculatePagIbigContributions(monthlyIncome decimal.Decimal) decimal.Decimal {
+	/* The https://taxcalculatorphilippines.com/ still uses the 2021 Pag-Ibig contribution table
+	This takes the monthly income and multiplies it by 1% if it is less than or equal to 1500,
+	otherwise it multiplies it by 2%
+
+	The maximum pag-ibig contribution is 100.00
+	*/
+	var rate decimal.Decimal
+	max := decimal.NewFromInt(100)
+
+	if monthlyIncome.LessThanOrEqual(decimal.NewFromInt(1500)) {
+		rate = decimal.NewFromFloat(0.01)
+	} else {
+		rate = decimal.NewFromFloat(0.02)
+	}
+
+	return decimal.Min(max, monthlyIncome.Mul(rate))
 }
 
-func calculatePhilHealthContributions(taxableIncome float64) float64 {
+func calculatePhilHealthContributions(taxableIncome decimal.Decimal) decimal.Decimal {
 	// insert code
-	return 0
+	return decimal.Zero
 }
 
-func calculateNetPayAfterDeductions(taxableIncome float64) float64 {
+func calculateNetPayAfterDeductions(taxableIncome decimal.Decimal) decimal.Decimal {
 	// insert code
-	return 0
+	return decimal.Zero
 }

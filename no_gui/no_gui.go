@@ -26,23 +26,20 @@ func calculateTax(taxableIncome decimal.Decimal) decimal.Decimal {
 
 	tax := decimal.Zero
 
-	for i := 1; i < len(brackets); i++ {
-		if taxableIncome.LessThanOrEqual(brackets[i]) {
-			if(i == 0) {
-				tax = 0
+	if taxableIncome.GreaterThan(brackets[0]) {
+		for i := 1; i < len(brackets); i++ {
+			if taxableIncome.LessThanOrEqual(brackets[i]) {
+				tax = tax.Add((taxableIncome.Sub(brackets[i-1])).Mul(rates[i]))
 				break
+			} else {
+				tax = tax.Add(brackets[i].Sub(brackets[i-1]).Mul(rates[i]))
 			}
-			tax = tax.Add((taxableIncome.Sub(brackets[i-1])).Mul(rates[]))
-			break
-		}else {
-		tax = tax.Add(brackets[i].Sub(brackets[i-1]).Mul(rates[i]))
-		// fmt.Println("\nADDED: ", brackets[i].Sub(brackets[i-1]).Mul(rates[i))
 		}
-	
+	}
 
-	return tax.Rund(2)
+	return tax.Round(2)
 }
 
 func main() {
-	fmt.Println(calculateTax(decimal.NewFromFloat(20832)))
+	fmt.Println(calculateTax(decimal.NewFromFloat(33333)))
 }

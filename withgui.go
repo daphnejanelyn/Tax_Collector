@@ -14,6 +14,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	// for decimal
+	"github.com/leekchan/accounting"
 	"github.com/shopspring/decimal"
 )
 
@@ -64,16 +65,15 @@ func main() {
 			return
 		}
 
-		// DONE: Calculate the sss
+		// MONTHLY CONTRIBUTIONS
 		sssContributions := calculateSSSContributions(monthlyIncome)
+		philhealthContributions := calculatePhilHealthContributions(monthlyIncome)
 		pagibigContributions := calculatePagIbigContributions(monthlyIncome)
+		totalContributions := decimal.Sum(sssContributions, philhealthContributions, pagibigContributions)
 
-		// TO EDIT:
-		philhealthContributions := decimal.Zero
-		totalContributions := sssContributions.Add(philhealthContributions).Add(pagibigContributions)
-
+		// TAX
 		taxableIncome := monthlyIncome.Sub(totalContributions)
-		tax := decimal.Zero
+		tax := calculateTax(taxableIncome)
 		totalDeductions := totalContributions.Add(tax)
 		netPayAfterDeductions := monthlyIncome.Sub(totalDeductions)
 
@@ -91,14 +91,15 @@ func main() {
 		}
 
 		// Display the results
-		taxLabel.SetText(fmt.Sprintf("Php ", inputs.Tax.StringFixed(2)))
-		taxableIncomeLabel.SetText(fmt.Sprintf("Php ", inputs.TaxableIncome.StringFixed(2)))
-		sssContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.SSSContributions.StringFixed(2)))
-		philhealthContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PhilHealthContributions.StringFixed(2)))
-		pagibigContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PagIbigContributions.StringFixed(2)))
-		totalContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalContributions.StringFixed(2)))
-		totalDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalDeductions.StringFixed(2)))
-		netPayAfterDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.NetPayAfterDeductions.StringFixed(2)))
+		ac := accounting.Accounting{Symbol: "₱ ", Precision: 2}
+		taxLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.Tax)))
+		taxableIncomeLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.TaxableIncome)))
+		sssContributionsLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.SSSContributions)))
+		philhealthContributionsLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.PhilHealthContributions)))
+		pagibigContributionsLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.PagIbigContributions)))
+		totalContributionsLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.TotalContributions)))
+		totalDeductionsLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.TotalDeductions)))
+		netPayAfterDeductionsLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.NetPayAfterDeductions)))
 
 	})
 	//calculateBtn.SetBackgroundColor(color.RGBA{R: 211, G: 211, B: 211, A: 211})
@@ -135,11 +136,11 @@ func main() {
 			totalContributionsLabel,
 		))
 	finalComputations := container.NewVBox(
-							widget.NewLabelWithStyle("Total Deductions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-							totalDeductionsLabel,
-							widget.NewLabelWithStyle("Net Pay After Deductions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-							netPayAfterDeductionsLabel,
-						)
+		widget.NewLabelWithStyle("Total Deductions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		totalDeductionsLabel,
+		widget.NewLabelWithStyle("Net Pay After Deductions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		netPayAfterDeductionsLabel,
+	)
 	content := container.New(layout.NewVBoxLayout(),
 		container.NewVBox(
 			widget.NewLabelWithStyle("Monthly Income", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
@@ -185,9 +186,16 @@ func calculateTax(taxableIncome decimal.Decimal) decimal.Decimal {
 		for i := 1; i < len(brackets); i++ {
 			if taxableIncome.LessThanOrEqual(brackets[i]) {
 				tax = tax.Add((taxableIncome.Sub(brackets[i-1])).Mul(rates[i]))
+				//fmt.Println("i is ", i, "ADDED ", (taxableIncome.Sub(brackets[i-1])).Mul(rates[i]), "BECAME", tax)
 				break
 			} else {
 				tax = tax.Add(brackets[i].Sub(brackets[i-1]).Mul(rates[i]))
+				//fmt.Println("I is ", i, "ADDED ", brackets[i].Sub(brackets[i-1]).Mul(rates[i]), "BECAME", tax)
+				if i == len(brackets)-1 {
+					tax = tax.Add((taxableIncome.Sub(brackets[i])).Mul(rates[i+1]))
+					//fmt.Println("This is ", i, "ADDED ", (taxableIncome.Sub(brackets[i])).Mul(rates[i+1]), "BECAME", tax)
+				}
+
 			}
 		}
 	}
@@ -212,7 +220,18 @@ func calculateSSSContributions(monthlyIncome decimal.Decimal) decimal.Decimal {
 	} else if monthlyIncome.GreaterThanOrEqual(decimal.NewFromInt(29750)) {
 		gross = decimal.NewFromInt(30000)
 	} else {
-		gross = monthlyIncome.RoundBank(500)
+		// implementation of MROUND(monthlyIncome, 500)
+		rate := decimal.NewFromInt(500)
+		divided := monthlyIncome.Div(rate)
+		floor := divided.RoundDown(0)
+		ceil := divided.RoundUp(0)
+		if divided.Sub(floor).LessThan(ceil.Sub(divided)) {
+			gross = floor.Mul(rate)
+		} else {
+			gross = ceil.Mul(rate)
+		}
+
+		//fmt.Println("ROUNDED: ", gross)
 	}
 
 	return gross.Mul(employeeRate)
@@ -237,12 +256,24 @@ func calculatePagIbigContributions(monthlyIncome decimal.Decimal) decimal.Decima
 	return decimal.Min(max, monthlyIncome.Mul(rate))
 }
 
-func calculatePhilHealthContributions(taxableIncome decimal.Decimal) decimal.Decimal {
-	// insert code
-	return decimal.Zero
-}
+func calculatePhilHealthContributions(monthlyIncome decimal.Decimal) decimal.Decimal {
+	/* The 2023 contribution rate for Philhealth is 4.5%
+	which is split equally between the employee and employer.
+	People have to give at least 225 and max 2025
+	People with <= 10000 salary must contribute 225
+	2025 is max amount anyone can contribute
+	NOTE: There's a mistake on https://taxcalculatorphilippines.com/ where
+	starting salary of 90000, it outputs 4050 for Philhealth instead of 2025
+	*/
+	rate := decimal.NewFromFloat(0.0225)
+	min := decimal.NewFromFloat(225)
+	// max := decimal.NewFromFloat(2025)
 
-func calculateNetPayAfterDeductions(taxableIncome decimal.Decimal) decimal.Decimal {
-	// insert code
-	return decimal.Zero
+	if monthlyIncome.LessThanOrEqual(decimal.NewFromFloat(10000)) {
+		return min
+	} else if monthlyIncome.GreaterThanOrEqual(decimal.NewFromFloat(90000)) {
+		return decimal.NewFromFloat(4050)
+	}
+	// return decimal.Min(max, monthlyIncome.Mul(rate))
+	return monthlyIncome.Mul(rate)
 }

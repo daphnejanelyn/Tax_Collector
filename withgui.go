@@ -91,14 +91,14 @@ func main() {
 		}
 
 		// Display the results
-		taxLabel.SetText(fmt.Sprintf("Income Tax: Php ", inputs.Tax))
-		taxableIncomeLabel.SetText(fmt.Sprintf("Taxable Income: Php ", inputs.TaxableIncome))
-		sssContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.SSSContributions))
-		philhealthContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PhilHealthContributions))
-		pagibigContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PagIbigContributions))
-		totalContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalContributions))
-		totalDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalDeductions))
-		netPayAfterDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.NetPayAfterDeductions))
+		taxLabel.SetText(fmt.Sprintf("Income Tax: Php ", inputs.Tax.Round(2).String()))
+		taxableIncomeLabel.SetText(fmt.Sprintf("Taxable Income: Php ", inputs.TaxableIncome.Round(2).String()))
+		sssContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.SSSContributions.Round(2).String()))
+		philhealthContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PhilHealthContributions.Round(2).String()))
+		pagibigContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.PagIbigContributions.Round(2).String()))
+		totalContributionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalContributions.Round(2).String()))
+		totalDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.TotalDeductions.Round(2).String()))
+		netPayAfterDeductionsLabel.SetText(fmt.Sprintf("Php ", inputs.NetPayAfterDeductions.Round(2).String()))
 	})
 	//calculateBtn.SetBackgroundColor(color.RGBA{R: 211, G: 211, B: 211, A: 211})
 
@@ -110,7 +110,7 @@ func main() {
 		taxLabel,
 		layout.NewSpacer())
 	contribContainer := container.NewVBox(
-		widget.NewLabelWithStyle("Monthly Contributions",fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+		widget.NewLabelWithStyle("Monthly Contributions", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		container.NewHBox(
 			widget.NewLabel("SSS Contribution"),
 			sssContributionsLabel,

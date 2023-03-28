@@ -2,14 +2,35 @@ package main
 
 import (
 	"fmt"
+	//"image/color"
 	"strconv"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
+
+/// create custom theme
+type myTheme struct{}
+
+func (*myTheme) Font(s fyne.TextStyle) fyne.Resource {
+	if s.Monospace {
+		return theme.DefaultTheme().Font(s)
+	}
+	if s.Bold {
+		if s.Italic {
+			return theme.DefaultTheme().Font(s)
+		}
+		return resourceMplus1cBoldTtf
+	}
+	if s.Italic {
+		return theme.DefaultTheme().Font(s)
+	}
+	return resourceMplus1cRegularTtf
+}
 
 // Define a struct to hold user input
 type TaxInputs struct {
@@ -35,6 +56,7 @@ func main() {
 
 	// Create the output widgets
 	taxLabel := widget.NewLabel("")
+	taxableIncomeLabel := widget.NewLabel("")
 	netPayAfterTaxLabel := widget.NewLabel("")
 	sssContributionsLabel := widget.NewLabel("")
 	pagibigContributionsLabel := widget.NewLabel("")
@@ -85,21 +107,24 @@ func main() {
 
 		// Display the results
 		taxLabel.SetText(fmt.Sprintf("Income Tax: Php %.2f", inputs.Tax))
+		taxableIncomeLabel.SetText(fmt.Sprintf("Taxable Income: Php %.2f", inputs.TaxableIncome))
 		netPayAfterTaxLabel.SetText(fmt.Sprintf("Net Pay After Tax: Php %.2f", inputs.NetPayAfterTax))
 		sssContributionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.SSSContributions))
 		philhealthContributionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.PhilHealthContributions))
 		pagibigContributionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.PagIbigContributions))
 		totalContributionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.TotalContributions))
-		totalDeductionsLabel.SetText(fmt.Sprintf("Total Deductions: Php %.2f", inputs.TotalDeductions))
-		netPayAfterDeductionsLabel.SetText(fmt.Sprintf("Net Pay After Deductions: Php %.2f", inputs.NetPayAfterDeductions))
+		totalDeductionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.TotalDeductions))
+		netPayAfterDeductionsLabel.SetText(fmt.Sprintf("Php %.2f", inputs.NetPayAfterDeductions))
 	})
+	//calculateBtn.SetBackgroundColor(color.RGBA{R: 211, G: 211, B: 211, A: 211})
 
 
 	// Create the layout
 	// Create the layout
 	taxContainer := container.NewVBox(
 				widget.NewLabel("Tax Computation"),
-				container.New(layout.NewHBoxLayout(), taxLabel),
+				taxableIncomeLabel,
+				taxLabel,
 				netPayAfterTaxLabel,
 				layout.NewSpacer())
 	contribContainer := container.NewVBox(
@@ -128,15 +153,17 @@ func main() {
 				calculateBtn,
 				layout.NewSpacer(),
 			),
-			container.New(layout.NewGridWrapLayout(fyne.NewSize(500, 500)), taxContainer, contribContainer),
-			layout.NewSpacer(),
+			container.New(layout.NewGridWrapLayout(fyne.NewSize(500, 500)), contribContainer, taxContainer),
 			container.NewVBox(
+				widget.NewLabel("Total Deductions"),
 				totalDeductionsLabel,
+				widget.NewLabel("Net Pay After Deductions Label"),
 				netPayAfterDeductionsLabel,
 			),
 		)
     // Create the window
     myWindow := myApp.NewWindow("Tax Calculator")
+	myApp.Settings().SetTheme(theme.LightTheme())
     myWindow.SetContent(content)
     myWindow.ShowAndRun()
 

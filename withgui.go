@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"image/color"
+
 	//"image/color"
 	"strconv"
 
@@ -13,8 +15,10 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-/// create custom theme
+// / create custom theme
 type myTheme struct{}
+
+var _ fyne.Theme = (*myTheme)(nil)
 
 func (*myTheme) Font(s fyne.TextStyle) fyne.Resource {
 	if s.Monospace {
@@ -24,12 +28,24 @@ func (*myTheme) Font(s fyne.TextStyle) fyne.Resource {
 		if s.Italic {
 			return theme.DefaultTheme().Font(s)
 		}
-		return resourceMplus1cBoldTtf
+		return resourceRubikBlackTtf
 	}
 	if s.Italic {
 		return theme.DefaultTheme().Font(s)
 	}
-	return resourceMplus1cRegularTtf
+	return resourceRubikBlackTtf
+}
+
+func (*myTheme) Color(n fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
+	return theme.DefaultTheme().Color(n, v)
+}
+
+func (*myTheme) Icon(n fyne.ThemeIconName) fyne.Resource {
+	return theme.DefaultTheme().Icon(n)
+}
+
+func (*myTheme) Size(n fyne.ThemeSizeName) float32 {
+	return theme.DefaultTheme().Size(n)
 }
 
 // Define a struct to hold user input
@@ -38,10 +54,10 @@ type TaxInputs struct {
 	TaxableIncome           float64
 	Tax                     float64
 	NetPayAfterTax          float64
-	SSSContributions		float64
-	PhilHealthContributions	float64
-	PagIbigContributions	float64
-	TotalContributions     float64
+	SSSContributions        float64
+	PhilHealthContributions float64
+	PagIbigContributions    float64
+	TotalContributions      float64
 	TotalDeductions         float64
 	NetPayAfterDeductions   float64
 }
@@ -86,23 +102,23 @@ func main() {
 		netPayAfterTax := monthlyIncome - (tax / 12) // INSERT RIGHT FORMULA
 		sssContributions := calculateSSSContributions(monthlyIncome)
 		philhealthContributions := calculatePhilHealthContributions(monthlyIncome)
-		pagibigContributions :=    calculatePagIbigContributions(monthlyIncome)
+		pagibigContributions := calculatePagIbigContributions(monthlyIncome)
 		totalContributions := sssContributions + philhealthContributions + pagibigContributions
 		totalDeductions := tax/12 + totalContributions // INSERT RIGHT FORMULA
 		netPayAfterDeductions := monthlyIncome - totalDeductions
 
 		// Create a TaxInputs struct to hold the user input and calculated values
 		inputs := TaxInputs{
-			MonthlyIncome:         monthlyIncome,
-			TaxableIncome:         taxableIncome,
-			Tax:                   tax,
-			NetPayAfterTax:        netPayAfterTax,
-			SSSContributions:	sssContributions,
+			MonthlyIncome:           monthlyIncome,
+			TaxableIncome:           taxableIncome,
+			Tax:                     tax,
+			NetPayAfterTax:          netPayAfterTax,
+			SSSContributions:        sssContributions,
 			PhilHealthContributions: philhealthContributions,
 			PagIbigContributions:    pagibigContributions,
-			TotalContributions:   totalContributions,
-			TotalDeductions:       totalDeductions,
-			NetPayAfterDeductions: netPayAfterDeductions,
+			TotalContributions:      totalContributions,
+			TotalDeductions:         totalDeductions,
+			NetPayAfterDeductions:   netPayAfterDeductions,
 		}
 
 		// Display the results
@@ -118,54 +134,53 @@ func main() {
 	})
 	//calculateBtn.SetBackgroundColor(color.RGBA{R: 211, G: 211, B: 211, A: 211})
 
-
 	// Create the layout
 	// Create the layout
 	taxContainer := container.NewVBox(
-				widget.NewLabel("Tax Computation"),
-				taxableIncomeLabel,
-				taxLabel,
-				netPayAfterTaxLabel,
-				layout.NewSpacer())
+		widget.NewLabel("Tax Computation"),
+		taxableIncomeLabel,
+		taxLabel,
+		netPayAfterTaxLabel,
+		layout.NewSpacer())
 	contribContainer := container.NewVBox(
-							widget.NewLabel("Monthly Contributions"),
-							container.NewHBox(
-							widget.NewLabel("SSS Contribution"),
-							sssContributionsLabel,	
-						),
-						container.NewHBox(
-							widget.NewLabel("Philheath Contribution"),
-							philhealthContributionsLabel,
-						),
-						container.NewHBox(
-							widget.NewLabel("PagIbig Contribution"),
-							pagibigContributionsLabel,
-						),
-						container.NewHBox(
-							widget.NewLabel("Total Contribution"),
-							totalContributionsLabel,
-						))
-	
+		widget.NewLabel("Monthly Contributions"),
+		container.NewHBox(
+			widget.NewLabel("SSS Contribution"),
+			sssContributionsLabel,
+		),
+		container.NewHBox(
+			widget.NewLabel("Philheath Contribution"),
+			philhealthContributionsLabel,
+		),
+		container.NewHBox(
+			widget.NewLabel("PagIbig Contribution"),
+			pagibigContributionsLabel,
+		),
+		container.NewHBox(
+			widget.NewLabel("Total Contribution"),
+			totalContributionsLabel,
+		))
+
 	content := container.New(layout.NewVBoxLayout(),
-			container.NewVBox(
-				widget.NewLabel("Monthly Income"),
-				incomeEntry,
-				calculateBtn,
-				layout.NewSpacer(),
-			),
-			container.New(layout.NewGridWrapLayout(fyne.NewSize(500, 500)), contribContainer, taxContainer),
-			container.NewVBox(
-				widget.NewLabel("Total Deductions"),
-				totalDeductionsLabel,
-				widget.NewLabel("Net Pay After Deductions Label"),
-				netPayAfterDeductionsLabel,
-			),
-		)
-    // Create the window
-    myWindow := myApp.NewWindow("Tax Calculator")
-	myApp.Settings().SetTheme(theme.LightTheme())
-    myWindow.SetContent(content)
-    myWindow.ShowAndRun()
+		container.NewVBox(
+			widget.NewLabel("Monthly Income"),
+			incomeEntry,
+			calculateBtn,
+			layout.NewSpacer(),
+		),
+		container.New(layout.NewGridWrapLayout(fyne.NewSize(500, 500)), contribContainer, taxContainer),
+		container.NewVBox(
+			widget.NewLabel("Total Deductions"),
+			totalDeductionsLabel,
+			widget.NewLabel("Net Pay After Deductions Label"),
+			netPayAfterDeductionsLabel,
+		),
+	)
+	// Create the window
+	myWindow := myApp.NewWindow("Tax Calculator")
+	myApp.Settings().SetTheme(&myTheme{})
+	myWindow.SetContent(content)
+	myWindow.ShowAndRun()
 
 }
 
@@ -190,22 +205,22 @@ func calculateTax(taxableIncome float64) float64 {
 	return tax
 }
 
-func calculateSSSContributions(taxableIncome float64) float64{
+func calculateSSSContributions(taxableIncome float64) float64 {
 	// insert code
 	return 0
 }
 
-func calculatePagIbigContributions(taxableIncome float64) float64{
+func calculatePagIbigContributions(taxableIncome float64) float64 {
 	// insert code
 	return 0
 }
 
-func calculatePhilHealthContributions(taxableIncome float64) float64{
+func calculatePhilHealthContributions(taxableIncome float64) float64 {
 	// insert code
 	return 0
 }
 
-func calculateNetPayAfterDeductions(taxableIncome float64) float64{
+func calculateNetPayAfterDeductions(taxableIncome float64) float64 {
 	// insert code
 	return 0
 }

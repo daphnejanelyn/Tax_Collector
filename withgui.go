@@ -135,7 +135,7 @@ func main() {
 			calculateBtn,
 			layout.NewSpacer(),
 		),
-		container.New(layout.NewGridWrapLayout(fyne.NewSize(500, 500)), contribContainer, taxContainer),
+		container.New(layout.NewGridWrapLayout(fyne.NewSize(300, 300)), contribContainer, taxContainer),
 		container.NewVBox(
 			widget.NewLabel("Total Deductions"),
 			totalDeductionsLabel,
@@ -147,6 +147,7 @@ func main() {
 	myWindow := myApp.NewWindow("Tax Calculator")
 	myApp.Settings().SetTheme(theme.LightTheme())
 	myWindow.SetContent(content)
+	myWindow.Resize(fyne.NewSize(800, 600))
 	myWindow.ShowAndRun()
 
 }

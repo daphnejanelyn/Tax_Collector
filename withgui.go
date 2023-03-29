@@ -109,30 +109,30 @@ func main() {
 	taxContainer := container.NewVBox(
 		widget.NewLabelWithStyle("Tax Computation", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 		container.NewHBox(
-			widget.NewLabel("Taxable Income"),
+			widget.NewLabel("Taxable Income\t\t"),
 			taxableIncomeLabel,
 		),
 		container.NewHBox(
-			widget.NewLabel("Income Tax"),
+			widget.NewLabel("Income Tax\t\t\t"),
 			taxLabel,
 		),
 		layout.NewSpacer())
 	contribContainer := container.NewVBox(
 		widget.NewLabelWithStyle("Monthly Contributions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 		container.NewHBox(
-			widget.NewLabel("SSS Contribution"),
+			widget.NewLabel("SSS Contribution\t\t"),
 			sssContributionsLabel,
 		),
 		container.NewHBox(
-			widget.NewLabel("Philheath Contribution"),
+			widget.NewLabel("Philheath Contribution\t"),
 			philhealthContributionsLabel,
 		),
 		container.NewHBox(
-			widget.NewLabel("PagIbig Contribution"),
+			widget.NewLabel("PagIbig Contribution\t"),
 			pagibigContributionsLabel,
 		),
 		container.NewHBox(
-			widget.NewLabel("Total Contribution"),
+			widget.NewLabel("Total Contribution\t\t"),
 			totalContributionsLabel,
 		))
 	finalComputations := container.NewVBox(
@@ -148,8 +148,8 @@ func main() {
 			calculateBtn,
 			layout.NewSpacer(),
 		),
-		container.New(layout.NewGridWrapLayout(fyne.NewSize(300, 250)), contribContainer, taxContainer),
-		container.New(layout.NewGridWrapLayout(fyne.NewSize(180, 180)), finalComputations),
+		container.New(layout.NewGridWrapLayout(fyne.NewSize(300, 200)), contribContainer, taxContainer),
+		container.New(layout.NewGridWrapLayout(fyne.NewSize(150, 150)), finalComputations),
 	)
 	// Create the window
 	myWindow := myApp.NewWindow("Tax Calculator")

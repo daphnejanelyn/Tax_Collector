@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	//"image/color"
-
-	//"image/color"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -12,13 +9,12 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-
-	// for decimal
 	"github.com/leekchan/accounting"
 	"github.com/shopspring/decimal"
 )
 
-// Define a struct to hold user input
+/* Define a structure for all variables needed
+   to hold computational results and inputs */
 type TaxInputs struct {
 	MonthlyIncome           decimal.Decimal
 	TaxableIncome           decimal.Decimal
@@ -33,14 +29,14 @@ type TaxInputs struct {
 }
 
 func main() {
-	// Create a new application
+	/* Create a new application along 
+	with its output and input widgets */
 	myApp := app.New()
 
-	// Create the input widgets
+	// Input Widgets
 	incomeEntry := widget.NewEntry()
-	incomeEntry.SetPlaceHolder("Enter your monthly income")
-
-	// Create the output widgets
+	
+	// Output Widgets
 	taxLabel := widget.NewLabel("")
 	taxableIncomeLabel := widget.NewLabel("")
 	sssContributionsLabel := widget.NewLabel("")
@@ -50,34 +46,39 @@ func main() {
 	totalDeductionsLabel := widget.NewLabel("")
 	netPayAfterDeductionsLabel := widget.NewLabel("")
 
-	sssEntry := widget.NewEntry()
-	sssEntry.SetPlaceHolder("Monthly SSS Contribution")
+	// Create input row for user input
+	incomeEntry.SetPlaceHolder("Enter your monthly income")
 
 	// Create the calculate button
 	calculateBtn := widget.NewButton("Calculate", func() {
+
 		// Parse user input
 		incomeStr := incomeEntry.Text
 
-		// Convert input to decimal.Decimal
+		// Convert input to decimal format
 		monthlyIncome, err := decimal.NewFromString(incomeStr)
+
+		// Function to cross check for invalid inputs
 		if err != nil || monthlyIncome.LessThan(decimal.Zero) {
 			widget.NewLabel("Invalid monthly income input")
 			return
 		}
 
-		// MONTHLY CONTRIBUTIONS
+		// Calling functions to calculate for monthly contributions
 		sssContributions := calculateSSSContributions(monthlyIncome)
 		philhealthContributions := calculatePhilHealthContributions(monthlyIncome)
 		pagibigContributions := calculatePagIbigContributions(monthlyIncome)
-		totalContributions := decimal.Sum(sssContributions, philhealthContributions, pagibigContributions)
+		totalContributions := decimal.Sum(sssContributions, 
+							  philhealthContributions, 
+							  pagibigContributions)
 
-		// TAX
+		// Calling functions to calculate for tax deductions
 		taxableIncome := monthlyIncome.Sub(totalContributions)
 		tax := calculateTax(taxableIncome)
 		totalDeductions := totalContributions.Add(tax)
 		netPayAfterDeductions := monthlyIncome.Sub(totalDeductions)
 
-		// Create a TaxInputs struct to hold the user input and calculated values
+		// Create a display struct to hold the user input and calculated values
 		inputs := TaxInputs{
 			MonthlyIncome:           monthlyIncome,
 			TaxableIncome:           taxableIncome,
@@ -90,7 +91,9 @@ func main() {
 			NetPayAfterDeductions:   netPayAfterDeductions,
 		}
 
-		// Display the results
+		/* Display the results of computation in Peso format 
+		with 2 digit precision for decimal points */
+
 		ac := accounting.Accounting{Symbol: "₱ ", Precision: 2}
 		taxLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.Tax)))
 		taxableIncomeLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.TaxableIncome)))
@@ -102,12 +105,12 @@ func main() {
 		netPayAfterDeductionsLabel.SetText(fmt.Sprintf(ac.FormatMoney(inputs.NetPayAfterDeductions)))
 
 	})
-	//calculateBtn.SetBackgroundColor(color.RGBA{R: 211, G: 211, B: 211, A: 211})
 
-	// Create the layout
-	// Create the layout
+	/* Container for tax computations (i.e., taxable income and income tax) */
 	taxContainer := container.NewVBox(
-		widget.NewLabelWithStyle("Tax Computation", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		widget.NewLabelWithStyle("Tax Computation", 
+								fyne.TextAlignLeading, 
+								fyne.TextStyle{Bold: true}),
 		container.NewHBox(
 			widget.NewLabel("Taxable Income\t\t"),
 			taxableIncomeLabel,
@@ -117,8 +120,12 @@ func main() {
 			taxLabel,
 		),
 		layout.NewSpacer())
+	
+	/* Container for monthly contributions computations (i.e., SSS, PagIbig and Philheath) */
 	contribContainer := container.NewVBox(
-		widget.NewLabelWithStyle("Monthly Contributions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		widget.NewLabelWithStyle("Monthly Contributions", 
+								 fyne.TextAlignLeading, 
+								 fyne.TextStyle{Bold: true}),
 		container.NewHBox(
 			widget.NewLabel("SSS Contribution\t\t"),
 			sssContributionsLabel,
@@ -135,23 +142,39 @@ func main() {
 			widget.NewLabel("Total Contribution\t\t"),
 			totalContributionsLabel,
 		))
+	
+	/* Container for display of final computations on net pay and total deductions */	
 	finalComputations := container.NewVBox(
-		widget.NewLabelWithStyle("Total Deductions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		widget.NewLabelWithStyle("Total Deductions", 
+								fyne.TextAlignLeading, 
+								fyne.TextStyle{Bold: true}),
 		totalDeductionsLabel,
-		widget.NewLabelWithStyle("Net Pay After Deductions", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		widget.NewLabelWithStyle("Net Pay After Deductions", 
+								fyne.TextAlignLeading, 
+								fyne.TextStyle{Bold: true}),
 		netPayAfterDeductionsLabel,
 	)
+
+	/* Container for display of prompt box for user's input on monthly contribution */
 	content := container.New(layout.NewVBoxLayout(),
 		container.NewVBox(
-			widget.NewLabelWithStyle("Monthly Income", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+			widget.NewLabelWithStyle("Monthly Income", 
+									fyne.TextAlignLeading, 
+									fyne.TextStyle{Bold: true}),
 			incomeEntry,
 			calculateBtn,
 			layout.NewSpacer(),
 		),
-		container.New(layout.NewGridWrapLayout(fyne.NewSize(300, 200)), contribContainer, taxContainer),
-		container.New(layout.NewGridWrapLayout(fyne.NewSize(150, 150)), finalComputations),
+
+		/* Resizing tax and contributions container through Grid Wrap Layout Manager */
+		container.New(layout.NewGridWrapLayout(fyne.NewSize(300, 200)), 
+											  contribContainer, 
+											  taxContainer),
+		container.New(layout.NewGridWrapLayout(fyne.NewSize(150, 150)), 
+											  finalComputations),
 	)
-	// Create the window
+
+	// Create a new window for the desktop application
 	myWindow := myApp.NewWindow("Tax Calculator")
 	myApp.Settings().SetTheme(theme.LightTheme())
 	myWindow.SetContent(content)

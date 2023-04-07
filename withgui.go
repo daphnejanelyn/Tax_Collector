@@ -71,14 +71,18 @@ func main() {
 		sssContributions := calculateSSSContributions(monthlyIncome)
 		philhealthContributions := calculatePhilHealthContributions(monthlyIncome)
 		pagibigContributions := calculatePagIbigContributions(monthlyIncome)
+		// Total contributions is calculated from summing up the SSS, Philhealth, Pag-ibig contributions
 		totalContributions := decimal.Sum(sssContributions,
 			philhealthContributions,
 			pagibigContributions)
 
-		// Calling functions to calculate for tax deductions
+		// Deducting the total contributions to produce the taxable income
 		taxableIncome := monthlyIncome.Sub(totalContributions)
+		// Calling the function to calculate for the tax
 		tax := calculateTax(taxableIncome)
+		// Adding the tax to the total deductions
 		totalDeductions := totalContributions.Add(tax)
+		// Getting the net pay
 		netPayAfterDeductions := monthlyIncome.Sub(totalDeductions)
 
 		// Create a display struct to hold the user input and calculated values
@@ -187,10 +191,15 @@ func main() {
 
 }
 
-// Define a function to calculate tax based on taxable income
-func calculateTax(taxableIncome decimal.Decimal) decimal.Decimal {
-	// Calculaed from the 2022 Tax Table
+/*
+	Calculates the tax based on the taxable income:
 
+Calculated from the 2022 Tax Table
+*/
+func calculateTax(taxableIncome decimal.Decimal) decimal.Decimal {
+	// Calculated from the 2022 Tax Table
+
+	// Defines the tax brackets
 	var brackets = []decimal.Decimal{
 		decimal.NewFromFloat(0),
 		decimal.NewFromFloat(20833),
@@ -200,6 +209,7 @@ func calculateTax(taxableIncome decimal.Decimal) decimal.Decimal {
 		decimal.NewFromFloat(666667),
 	}
 
+	// Defines the rates for calculation within each tax bracket
 	var rates = []decimal.Decimal{
 		decimal.NewFromFloat(0.0),
 		decimal.NewFromFloat(0.20),
@@ -209,6 +219,7 @@ func calculateTax(taxableIncome decimal.Decimal) decimal.Decimal {
 		decimal.NewFromFloat(0.35),
 	}
 
+	// Defines the base tax to be added upon within each bracket
 	var bases = []decimal.Decimal{
 		decimal.NewFromFloat(0.0),
 		decimal.NewFromFloat(0.0),
@@ -218,38 +229,45 @@ func calculateTax(taxableIncome decimal.Decimal) decimal.Decimal {
 		decimal.NewFromFloat(200833.33),
 	}
 
-	tax := decimal.Zero
-
+	// Calculates for the bracket where the taxable income is lovated
 	i := 1
 	for i < 6 && taxableIncome.GreaterThanOrEqual(brackets[i]) {
 		i++
 	}
 	i--
 
-	tax = bases[i].Add((taxableIncome.Sub(brackets[i])).Mul(rates[i]))
-	fmt.Println()
+	/*
+		Calculates the tax besed on the taxable income using the formula:
+		base + (taxableIncome - bracket) * rate
+	*/
+	tax := bases[i].Add((taxableIncome.Sub(brackets[i])).Mul(rates[i]))
 
+	// Returns the tax rounded to 2 decimal places
 	return tax.Round(2)
 }
 
-func calculateSSSContributions(monthlyIncome decimal.Decimal) decimal.Decimal {
-	/* Notice that based on the 2021-2022 SSS Table,
-	the formula to get the gross contribution based on the monthly income is
-	the nearest multiple of 500, except when it is lower than 3250 it is automatically 3000,
-	and when it is greater than or equal to 24750 it is automatically 25000.
-	This is then multiplied by 4.5% to get the employee's actual SSS contribution
+/*
+	Calculates the SSS Contribution based on the monthly income:
 
-	The following code is the implementation of this
-	*/
+Based on the 2021-2022 SSS Table,
+the gross contribution is the multiple of 500 nearest to the monthly income.
+The gross contribution is 3000 for monthly income less than 3250 (minimum),
+the gross contribution is 25000 for monthly income greater than 24750 (maximum).
+
+The gross contribution is then multiplied by 4.5% to get the employee's actual SSS contribution.
+*/
+func calculateSSSContributions(monthlyIncome decimal.Decimal) decimal.Decimal {
+	// Declaring the 4.5% rate for employee contribution
 	employeeRate := decimal.NewFromFloat(0.045)
 
 	var gross decimal.Decimal
+
 	if monthlyIncome.LessThan(decimal.NewFromInt(3250)) {
-		gross = decimal.NewFromInt(3000)
+		gross = decimal.NewFromInt(3000) // The minimum gross contribution
 	} else if monthlyIncome.GreaterThanOrEqual(decimal.NewFromInt(24750)) {
-		gross = decimal.NewFromInt(25000)
+		gross = decimal.NewFromInt(25000) // The maximum gross contribution
 	} else {
-		// implementation of MROUND(monthlyIncome, 500)
+		// Rounding the monthly income to the nearest multiple of 500
 		rate := decimal.NewFromInt(500)
 		divided := monthlyIncome.Div(rate)
 		floor := divided.RoundDown(0)
@@ -259,49 +277,61 @@ func calculateSSSContributions(monthlyIncome decimal.Decimal) decimal.Decimal {
 		} else {
 			gross = ceil.Mul(rate)
 		}
-
-		//fmt.Println("ROUNDED: ", gross)
 	}
 
+	// Returns the gross contribution multiplied by the employee rate
 	return gross.Mul(employeeRate)
 }
 
-func calculatePagIbigContributions(monthlyIncome decimal.Decimal) decimal.Decimal {
-	/* The 2021 Pag-Ibig contribution table takes the monthly income and
-	multiplies it by 1% if it is less than or equal to 1500,
-	otherwise it multiplies it by 2%
+/*
+	Calculates the Pag-ibig Contribution based on the monthly income:
 
-	The maximum pag-ibig contribution is 100.00
-	*/
+The 2021-2022 Pag-Ibig contribution table takes the monthly income and
+multiplies it by 1% if it is less than or equal to 1500,
+otherwise it multiplies it by 2%
+
+The maximum pag-ibig contribution is 100.00
+*/
+func calculatePagIbigContributions(monthlyIncome decimal.Decimal) decimal.Decimal {
 	var rate decimal.Decimal
+	// Defining the maximum pag-ibig contribution
 	max := decimal.NewFromInt(100)
 
 	if monthlyIncome.LessThanOrEqual(decimal.NewFromInt(1500)) {
-		rate = decimal.NewFromFloat(0.01)
+		rate = decimal.NewFromFloat(0.01) // Rate is 1% if income <= 1500
 	} else {
-		rate = decimal.NewFromFloat(0.02)
+		rate = decimal.NewFromFloat(0.02) // Rate is 2% if income > 1500
 	}
 
 	return decimal.Min(max, monthlyIncome.Mul(rate))
 }
 
+/*
+	Calculates the Philhealth contribution based on the monthly income:
+
+The 2022 contribution rate for Philhealth is 4.0%
+which is split equally between the employee and employer.
+
+People with <= 10000 salary must contribute 200.
+People with >= 80000 salary must contribute 1600
+*/
 func calculatePhilHealthContributions(monthlyIncome decimal.Decimal) decimal.Decimal {
-	/* The 2022 contribution rate for Philhealth is 4.0%
-	which is split equally between the employee and employer.
-
-	People with <= 10000 salary must contribute 200.
-	People with >= 80000 salary must contribute 1600
-
-	*/
+	// Defining the rate for employees as 2%
 	rate := decimal.NewFromFloat(0.02)
+	// Defining the minimum threshold of 10000 for monthly income
 	min_threshold := decimal.NewFromFloat(10000)
+	// Defining the maximum threshold of 80000 for monthly income
 	max_threshold := decimal.NewFromFloat(80000)
 
+	/* Setting the monthly income for calculation as the min/max threshold
+	if the income is less than or greater than the min/max threshold respectively
+	*/
 	if monthlyIncome.LessThan(min_threshold) {
 		monthlyIncome = min_threshold
 	} else if monthlyIncome.GreaterThan(max_threshold) {
 		monthlyIncome = max_threshold
 	}
 
+	// Returns the monthly income multiplied by the Philhealth rate
 	return monthlyIncome.Mul(rate)
 }

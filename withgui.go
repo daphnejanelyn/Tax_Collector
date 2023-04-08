@@ -188,7 +188,6 @@ func main() {
 	myWindow.Resize(fyne.NewSize(600, 600))
 	myWindow.SetFixedSize(true)
 	myWindow.ShowAndRun()
-
 }
 
 /*
@@ -229,7 +228,7 @@ func calculateTax(taxableIncome decimal.Decimal) decimal.Decimal {
 		decimal.NewFromFloat(200833.33),
 	}
 
-	// Calculates for the bracket where the taxable income is lovated
+	// Calculates for the bracket where the taxable income is loated
 	i := 1
 	for i < 6 && taxableIncome.GreaterThanOrEqual(brackets[i]) {
 		i++
@@ -240,7 +239,6 @@ func calculateTax(taxableIncome decimal.Decimal) decimal.Decimal {
 		Calculates the tax besed on the taxable income using the formula:
 		base + (taxableIncome - bracket) * rate
 	*/
-	tax := bases[i].Add((taxableIncome.Sub(brackets[i])).Mul(rates[i]))
 
 	// Returns the tax rounded to 2 decimal places
 	return tax.Round(2)
